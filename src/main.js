@@ -11,7 +11,7 @@ const WINDOW_HEIGHT = 210;
 
 function getTopCenterPosition(winWidth, winHeight) {
   const primaryDisplay = screen.getPrimaryDisplay();
-  const { workArea } = primaryDisplay; 
+  const { workArea } = primaryDisplay;
 
   const x = Math.round(workArea.x + (workArea.width - winWidth) / 2);
   const y = Math.round(workArea.y);
@@ -32,7 +32,7 @@ const createWindow = () => {
     alwaysOnTop: true,
     resizable: false,
     frame: false,
-    skipTaskbar: false,
+    skipTaskbar: true, 
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -59,6 +59,10 @@ const createWindow = () => {
 };
 
 app.whenReady().then(() => {
+  if (process.platform === 'darwin') {
+    app.dock.hide();
+  }
+
   createWindow();
 
   app.on('activate', () => {
