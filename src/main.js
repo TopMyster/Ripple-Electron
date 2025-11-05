@@ -8,8 +8,8 @@ if (started) {
 
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
-    width: 500,
-    height: 220,
+    width: 480,
+    height: 230,
     backgroundColor: "#0000",
     transparent: true,
     BrowserWindow: false,
