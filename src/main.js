@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, screen } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 
@@ -6,16 +6,33 @@ if (started) {
   app.quit();
 }
 
+const WINDOW_WIDTH = 500;
+const WINDOW_HEIGHT = 210;
+
+function getTopCenterPosition(winWidth, winHeight) {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { workArea } = primaryDisplay; 
+
+  const x = Math.round(workArea.x + (workArea.width - winWidth) / 2);
+  const y = Math.round(workArea.y);
+
+  return { x, y };
+}
+
 const createWindow = () => {
+  const { x, y } = getTopCenterPosition(WINDOW_WIDTH, WINDOW_HEIGHT);
+
   const mainWindow = new BrowserWindow({
-    width: 480,
-    height: 230,
-    backgroundColor: "#0000",
+    width: WINDOW_WIDTH,
+    height: WINDOW_HEIGHT,
+    x,
+    y,
+    backgroundColor: '#00000000',
     transparent: true,
-    BrowserWindow: false,
     alwaysOnTop: true,
     resizable: false,
-    y: 0,
+    frame: false,
+    skipTaskbar: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -24,8 +41,21 @@ const createWindow = () => {
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+    mainWindow.loadFile(
+      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)
+    );
   }
+
+  const recenter = () => {
+    const pos = getTopCenterPosition(WINDOW_WIDTH, WINDOW_HEIGHT);
+    mainWindow.setPosition(pos.x, pos.y);
+  };
+
+  screen.on('display-metrics-changed', recenter);
+  screen.on('display-added', recenter);
+  screen.on('display-removed', recenter);
+
+  mainWindow.on('show', recenter);
 };
 
 app.whenReady().then(() => {
@@ -38,14 +68,8 @@ app.whenReady().then(() => {
   });
 });
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
